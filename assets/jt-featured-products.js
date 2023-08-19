@@ -4,26 +4,57 @@ const Products = {
      * @param {Object} productsJson
      */
      displayProducts: (productsJson) => {
-      console.log(productsJson);
-      const productsContainer = document.getElementById("productsContainer"); // Assuming you have a container element with id "productsContainer"
+
+      // Grab product container
+      const productsContainer = document.querySelector(".fp-products-container");
     
       // Clear existing products
       productsContainer.innerHTML = "";
     
+      // Function to convert Shopify MoneyV2 object to a legible price
+      const formatPrice = (MoneyV2) => {
+        let amount = parseFloat(MoneyV2.amount);
+        let locale = Shopify.locale + '-' + Shopify.country; //eg. 'en-GB'
+
+        return amount.toLocaleString(locale, {
+            style: 'currency',
+            currency: MoneyV2.currencyCode
+        });
+      }
+
       // Loop through each product
       productsJson.products.edges.forEach((product) => {
         const { id, title, description, images, priceRange, compareAtPriceRange } = product.node;
-    
+
+        // Format prices
+        const price = formatPrice(priceRange.minVariantPrice);
+        const priceCompare = formatPrice(compareAtPriceRange.minVariantPrice);
+
         // Create a div for the product
         const productDiv = document.createElement("div");
-        productDiv.classList.add("product");
+
+        productDiv.classList.add("fp-product-card", "animate--fade-in");
+
+        console.log(compareAtPriceRange.minVariantPrice);
+        console.log(priceRange.minVariantPrice)
+
         productDiv.innerHTML = `
-          <img src="${images.edges[0].node.originalSrc}" alt="${title}" />
-          <h3>${title}</h3>
-          <p>${description}</p>
-          <p>Price: ${priceRange.minVariantPrice.amount} ${priceRange.minVariantPrice.currencyCode}</p>
-          <p>Was: ${compareAtPriceRange.minVariantPrice.amount} ${compareAtPriceRange.minVariantPrice.currencyCode}</p>
-          <button>Buy Now</button>
+            <img src="${images.edges[0].node.originalSrc}" class="fp-product-card-image" alt="${title}" />
+            <h3>${title}</h3>
+            <div class="fp-product-card-price">
+                <div class="fp-price">
+                    ${price}
+                </div>
+
+                ${parseFloat(compareAtPriceRange.minVariantPrice.amount) > parseFloat(priceRange.minVariantPrice.amount) ? `<div class="fp-price-compare">${priceCompare}</div>` : ``}
+
+            </div>
+            <p>${description}</p>
+            <a href="#" class="fp-cta inverse fluid">
+                <div class="label">  
+                    Buy Now
+                </div> 
+            </a>
         `;
     
         // Append the product div to the container
@@ -33,19 +64,20 @@ const Products = {
     
   
     state: {
-      storeUrl: "https://m-p-technical-test.myshopify.com/api/2023-01/graphql.json",
+      storeUrl: "",
       contentType: "application/json",
       accept: "application/json",
-      accessToken: "bc47fff02556a8e3426af638bcf634ac",
+      accessToken: "",
+      productsToShow: 3
     },
   
     /**
      * Sets up the query string for the GraphQL request
      * @returns {String} A GraphQL query string
      */
-    query: () => `
+    query: (productsToShow) => `
       {
-        products(first: 3) {
+        products(first: ${productsToShow}) {
           edges {
             node {
               id
@@ -98,7 +130,7 @@ const Products = {
           "X-Shopify-Storefront-Access-Token": Products.state.accessToken,
         },
         body: JSON.stringify({
-          query: Products.query(),
+          query: Products.query(Products.state.productsToShow),
         }),
       });
       const productsResponseJson = await productsResponse.json();
@@ -118,5 +150,8 @@ const Products = {
   };
   
   document.addEventListener("DOMContentLoaded", () => {
+    // Pass GraphQL endpoint information to Products.state
+    Object.assign(Products.state, featuredProductsSettings);
+
     Products.initialize();
   });
