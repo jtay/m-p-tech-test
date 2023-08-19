@@ -1,0 +1,32 @@
+<script src="{{ 'jt-featured-products.js' | asset_url }}" defer="defer"></script>
+{{ 'jt-featured-products.css' | asset_url | stylesheet_tag }}
+
+<div class="title-bar">
+    <img src="{{ 'M-P-Logo-black.png' | asset_url }}" class="logo" />
+    <button class="title-bar__button fetchButton">Fetch The Products</button>
+  </div>
+  <main>
+    <!-- Put any HTML here -->
+    <h1>Shop the latest Snowboards</h1>
+    <subheading>Get radical on the slopes this winter!</subheading>
+      <div id="productsContainer"></div>
+    <!-- End -->      
+  </main>
+{% schema %}
+  {
+    "name": "Featured Products (JT)",
+    "tag": "section",
+    "settings": [
+        {
+            "type": "header",
+            "content": "Featured Products Section",
+            "info": "M&P Tech Test"
+        }
+    ],
+    "presets": [
+        {
+          "name": "Featured Products (JT)"
+        }
+    ]    
+  }
+{% endschema %}
